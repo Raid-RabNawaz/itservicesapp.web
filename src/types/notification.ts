@@ -1,0 +1,1 @@
+export type { NotificationDto, NotificationTemplateDto } from "./api";

@@ -1,103 +1,103 @@
-import Image from "next/image";
+"use client";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { UserRole } from "@/types";
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+interface User {
+  id: number;
+  fullName?: string;
+  role: UserRole | "Customer" | "Technician" | "Admin";
+}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+const ROLE_LABEL: Record<UserRole, "Customer" | "Technician" | "Admin"> = {
+  [UserRole.Customer]: "Customer",
+  [UserRole.Technician]: "Technician",
+  [UserRole.Admin]: "Admin",
+};
+
+function normalizeRole(role: User["role"]): "Customer" | "Technician" | "Admin" {
+  if (typeof role === "number") return ROLE_LABEL[role] ?? "Customer";
+  return role;
+}
+
+export default function HomePage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/auth/profile");
+        if (response.ok) {
+          const userData = await response.json();
+          setUser({ id: userData.id, fullName: userData.fullName, role: userData.role });
+        }
+      } catch {
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  const getDashboardLink = () => {
+    if (!user) return null;
+    const role = normalizeRole(user.role);
+
+    switch (role) {
+      case "Admin":
+        return "/admin/dashboard";
+      case "Technician":
+        return "/tech/dashboard";
+      case "Customer":
+      default:
+        return "/app/dashboard";
+    }
+  };
+
+  const greetingName = user?.fullName ? user.fullName.split(" ")[0] : "";
+
+  if (isLoading) {
+    return (
+      <section className="grid gap-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
+          <div className="flex gap-3">
+            <div className="h-10 bg-gray-200 rounded w-32"></div>
+            <div className="h-10 bg-gray-200 rounded w-24"></div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="grid gap-6">
+      <h1 className="text-3xl font-bold">On-demand IT Support for Home & Business</h1>
+      <p>Book certified technicians for repairs, setup, and troubleshooting.</p>
+
+      {user ? (
+        <div className="flex gap-3">
+          <Link href="/services" className="px-4 py-2 rounded bg-black text-white">Explore Services</Link>
+          <Link
+            href={getDashboardLink()!}
+            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+          >
+            Go to Dashboard
+          </Link>
+          <p className="text-sm text-gray-600 flex items-center">
+            Welcome back, {greetingName || "there"}!
+          </p>
+        </div>
+      ) : (
+        <div className="flex gap-3">
+          <Link href="/services" className="px-4 py-2 rounded bg-black text-white">Explore Services</Link>
+          <Link href="/auth/register" className="px-4 py-2 rounded border">Get Started</Link>
+        </div>
+      )}
+    </section>
   );
 }
